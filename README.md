@@ -57,7 +57,19 @@ npm run preview -- --port 4173 --strictPort
 
 `dist/` contiene los archivos publicables en un servidor estático. Usa HTTP(S) para servirlos. El mundo se renderiza con Three.js/WebGL 2; el radar utiliza Canvas 2D y el audio se sintetiza con Web Audio. Three.js y las tipografías se sirven desde el propio proyecto. Tras cargar sus recursos, la partida no hace peticiones externas. Esto no instala un service worker ni garantiza recarga sin conexión.
 
-Para publicar bajo un subdirectorio, genera con `npm run build -- --base=/nombre-del-subdirectorio/` y adapta la referencia del favicon si es necesario. La configuración por defecto está preparada para la raíz de un dominio.
+Para publicar bajo un subdirectorio, genera con `npm run build -- --base=/nombre-del-subdirectorio/`. Los recursos y el favicon respetan esa ruta. La configuración por defecto está preparada para la raíz de un dominio.
+
+## Compartir con GitHub Pages
+
+La dirección prevista del juego es **https://baztp.github.io/GAMEZOMBIS/**. Estará disponible cuando GitHub Pages termine de publicar la rama `gh-pages`.
+
+```sh
+npm run deploy:pages
+```
+
+Este comando compila para `/GAMEZOMBIS/` y sube únicamente los archivos estáticos a `gh-pages`, incluyendo `.nojekyll`. Requiere acceso de escritura al repositorio. Conserva la rama de trabajo y el índice de Git; no usa un worktree ni fuerza el historial remoto.
+
+Si Pages no está activado, abre **Settings → Pages** en GitHub y selecciona **Deploy from a branch → gh-pages → / (root) → Save**. Espera a que GitHub confirme el despliegue antes de compartir la dirección. Publicar el código en `main` no actualiza por sí solo el juego: ejecuta `npm run deploy:pages` después de las futuras actualizaciones.
 
 ## Verificación
 

@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
+    "build:pages": "vite build --base=/GAMEZOMBIS/",
+    "deploy:pages": "npm run build:pages && node scripts/publish-pages.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --test tests/engine.test.js",
     "test:e2e": "playwright test"
