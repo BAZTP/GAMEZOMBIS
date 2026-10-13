@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>3D renderer test fixture</title></head>
+<body style="margin:0"><canvas id="scene" style="width:640px;height:480px;display:block"></canvas>
+<script type="module">
+  import * as THREE from 'three';
+  import { Renderer } from '/src/render.js';
+  import { Game } from '/src/engine.js';
+  const game = new Game({ seed: 42 });
+  const renderer = new Renderer(document.querySelector('canvas'));
+  renderer.resetCamera(game.player);
+  renderer.draw(game, 1);
+  window.fixture = { renderer, game, Game, THREE };
+</script></body></html>
