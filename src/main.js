@@ -5,7 +5,7 @@ import '@fontsource/dm-sans/latin-500.css';
 import '@fontsource/ibm-plex-mono/latin-400.css';
 import '@fontsource/ibm-plex-mono/latin-500.css';
 import './style.css';
-import { Game, WEAPONS, UPGRADES, dist } from './engine.js';
+import { Game, WEAPONS, UPGRADES, RESOURCES, WEAPON_AMMO_LABELS, dist } from './engine.js';
 import { Renderer } from './render.js';
 import { drawMinimap } from './minimap.js';
 import { Sound } from './audio.js';
@@ -43,7 +43,7 @@ document.querySelector('#app').innerHTML = `
         <div class="field-top"><div class="day-block"><span id="phase-icon">☀</span><div><strong id="day-label">DÍA 01</strong><small id="phase-label">VENTANA DE EXPLORACIÓN</small></div></div><div class="field-clock"><span id="timer">01:20</span><small id="timer-caption">HASTA EL ANOCHECER</small></div></div>
         <div class="coordinates">ZONA DE EXCLUSIÓN <span>23° 41′ N / 104° 52′ O</span></div>
         <div class="welcome" id="welcome"><div class="welcome-tag"><span></span> NO ESTÁS SOLO. TODAVÍA.</div><h2>EL MUNDO CAYÓ.<br><em>TÚ SIGUES AQUÍ.</em></h2><p>Tres relés. Cinco noches. Una última oportunidad.<br>Explora las ruinas y protege la señal que puede salvarte.</p><button class="primary start-button" id="start-btn">INICIAR SUPERVIVENCIA <span>↗</span></button><div class="difficulty"><label for="difficulty">DIFICULTAD</label><select id="difficulty"><option value="story">Explorador</option><option value="normal" selected>Superviviente</option><option value="hard">Sin piedad</option></select></div><small class="welcome-foot">SIN DESCARGAS · SIN CUENTAS · SOLO SOBREVIVIR</small></div>
-        <div class="field-bottom"><div class="vitals"><div><span class="heart">✚</span><strong id="hp">100</strong><small>SALUD</small></div><div class="health-track"><span id="hp-bar"></span></div><div class="stamina-track"><span id="stamina-bar"></span></div></div><div class="weapon-hud"><button id="weapon-cycle" aria-label="Cambiar arma" title="Cambiar arma (1 / 2 / 3)"><span id="weapon-name">PISTOLA M9</span> ⇄</button><div><strong id="clip">12</strong><span>/ <b id="ammo">108</b></span><button id="reload-btn" aria-label="Recargar" title="Recargar (R)"><kbd>R</kbd></button></div></div></div>
+        <div class="field-bottom"><div class="vitals"><div><span class="heart">✚</span><strong id="hp">100</strong><small>SALUD</small></div><div class="health-track"><span id="hp-bar"></span></div><div class="stamina-track"><span id="stamina-bar"></span></div></div><div class="weapon-hud"><small id="ammo-kind">BALAS</small><button id="weapon-cycle" aria-label="Cambiar arma" title="Cambiar arma (1–7)"><span id="weapon-name">PISTOLA M9</span> ⇄</button><div><strong id="clip">12</strong><span>/ <b id="ammo">108</b></span><button id="reload-btn" aria-label="Recargar" title="Recargar (R)"><kbd>R</kbd></button></div></div></div>
         <div class="toast" id="toast" role="status" aria-live="polite"></div>
         <div class="interaction" id="interaction"></div>
         <div class="touch-controls"><div id="joystick" aria-label="Joystick de movimiento"><span></span></div><div class="touch-right"><button id="touch-interact" aria-label="Recoger recursos">E</button><button id="touch-heal" aria-label="Usar botiquín">✚</button><button id="touch-fire" aria-label="Disparar">${icons.target}</button></div></div>
@@ -55,8 +55,8 @@ document.querySelector('#app').innerHTML = `
     <aside class="sidebar">
       <div class="sidebar-heading"><span class="eyebrow">CENTRO DE MANDO</span><span class="tiny-pill">EN LÍNEA</span></div>
       <section class="panel mission"><div class="panel-heading"><h2>${icons.signal} La última transmisión</h2><span>01—05</span></div><p>Restablece la antena y sobrevive hasta que llegue la evacuación.</p><div class="objective"><span class="objective-num" id="relay-check">01</span><div><strong>Recupera los relés</strong><small>Explora las tres zonas señaladas</small></div><b id="relay-count">0/3</b></div><div class="objective"><span class="objective-num" id="night-check">02</span><div><strong>Resiste cinco noches</strong><small>El refugio debe seguir en pie</small></div><b id="night-count">0/5</b></div><div class="mission-progress"><span id="mission-bar"></span></div></section>
-      <section class="panel shelter"><div class="panel-heading"><h2>${icons.shield} Refugio 07</h2><span id="base-status" class="text-green">ESTABLE</span></div><div class="base-stat"><span>Integridad estructural</span><strong id="base-hp">300 <small>/ 300</small></strong></div><div class="base-track"><span id="base-bar"></span></div><div class="shelter-footer"><span id="defenses">0 TORRETAS ACTIVAS</span><button id="repair-btn">REPARAR ↗</button></div></section>
-      <section class="panel supplies"><div class="panel-heading"><h2>${icons.box} Suministros</h2><span>MOCHILA</span></div><div class="resource-grid"><div><span class="resource-icon scrap">▱</span><strong id="scrap">24</strong><small>CHATARRA</small></div><div><span class="resource-icon energy">ϟ</span><strong id="energy">6</strong><small>ENERGÍA</small></div><div><span class="resource-icon med">✚</span><strong id="medkits">2</strong><small>BOTIQUINES</small></div></div></section>
+      <section class="panel shelter"><div class="panel-heading"><h2>${icons.shield} Refugio 07</h2><span id="base-status" class="text-green">ESTABLE</span></div><div class="base-stat"><span>Integridad estructural</span><strong id="base-hp">300 <small>/ 300</small></strong></div><div class="base-track"><span id="base-bar"></span></div><p id="refuge-safety" class="refuge-safety">ENTRA AL PERÍMETRO PARA PROTEGERTE</p><div class="shelter-footer"><span id="defenses">0 TORRETAS ACTIVAS</span><button id="repair-btn">REPARAR ↗</button></div></section>
+      <section class="panel supplies"><div class="panel-heading"><h2>${icons.box} Suministros</h2><span>MOCHILA</span></div><div class="resource-grid"><div><span class="resource-icon scrap">▱</span><strong id="scrap">24</strong><small>CHATARRA</small></div><div><span class="resource-icon energy">ϟ</span><strong id="energy">6</strong><small>ENERGÍA</small></div><div><span class="resource-icon wood">▤</span><strong id="wood">0</strong><small>MADERA</small></div><div><span class="resource-icon parts">⚙</span><strong id="parts">0</strong><small>COMPONENTES</small></div><div><span class="resource-icon med">✚</span><strong id="medkits">2</strong><small>BOTIQUINES</small></div></div></section>
       <section class="panel radar"><div class="panel-heading"><h2>${icons.map} Radar del sector</h2><button id="map-btn" aria-label="Ampliar mapa" title="Mapa (M)">↗</button></div><button class="minimap-button" id="minimap-btn" aria-label="Abrir mapa del sector"><canvas id="minimap" width="480" height="280"></canvas><span class="radar-north">N ↑</span></button><div class="map-legend"><span><i class="green"></i>Refugio</span><span><i class="blue"></i>Relés</span><span><i class="orange"></i>Amenazas</span></div></section>
       <section class="noise-panel"><div>${icons.target}<span>HUELLA SONORA</span><strong id="noise-label">BAJA</strong></div><div class="noise-track">${Array.from({ length: 22 }, (_, i) => `<i data-noise="${i}"></i>`).join('')}</div><p id="noise-description">El silencio también es un arma.</p></section>
     </aside>
@@ -77,7 +77,7 @@ const keys = new Set(), pointer = { x: 0, y: 0, active: false, down: false }, to
 $('#reload-btn').onclick = () => { if (started && !paused) game.reload(); };
 $('#weapon-cycle').onclick = () => {
   if (!started || paused) return;
-  for (let n = 1; n <= 3; n++) { const index = (game.weapon + n) % 3; if (game.switchWeapon(index)) break; }
+  for (let n = 1; n <= WEAPONS.length; n++) { const index = (game.weapon + n) % WEAPONS.length; if (game.switchWeapon(index)) break; }
 };
 function updateAudioButton() { $('#audio-btn').classList.toggle('muted', !sound.enabled); $('#audio-btn').setAttribute('aria-label', sound.enabled ? 'Desactivar sonido' : 'Activar sonido'); $('#audio-btn').setAttribute('aria-pressed', String(sound.enabled)); }
 updateAudioButton();
@@ -116,7 +116,7 @@ function showModal(type, content) {
 }
 const closeButton = '<button class="close-modal" data-close aria-label="Cerrar">×</button>';
 function openHelp() {
-  showModal('help', `${closeButton}<span class="eyebrow">MANUAL DE CAMPO / 07</span><h2 id="dialog-title">Aprende a seguir vivo.</h2><p class="modal-lead">Saquea de día, prepara tus defensas y protege el refugio de noche. Recupera los tres relés azules del mapa y sobrevive cinco noches para evacuar.</p><div class="help-grid">${[['W A S D / ↑ ↓ ← →','Moverse respecto a la cámara'],['RATÓN + CLIC','Apuntar y disparar'],['E (MANTENER)','Abrir cajas y recuperar relés'],['SHIFT','Correr · consume resistencia'],['R','Recargar el arma'],['Q','Usar un botiquín'],['1 / 2 / 3','Cambiar de arma desbloqueada'],['TAB','Taller (cerca del refugio)'],['M','Consultar el mapa'],['ESC','Pausar / continuar'],['Z / X · V','Girar cámara · restablecer vista'],['RUEDA / + / −','Acercar o alejar la cámara']].map(([k,v]) => `<div><kbd>${k}</kbd><span>${v}</span></div>`).join('')}</div><div class="field-note"><strong>Escucha el silencio.</strong> Correr y disparar aumenta tu huella sonora. Una huella alta atrae enemigos desde más lejos y acelera la horda. Cada amanecer recibes suministros. En móvil, usa el joystick y el botón de disparo con apuntado automático. Los botones 3D permiten girar y acercar la cámara.</div><button class="primary" data-close>ENTENDIDO <span>↗</span></button>`);
+  showModal('help', `${closeButton}<span class="eyebrow">MANUAL DE CAMPO / 07</span><h2 id="dialog-title">Aprende a seguir vivo.</h2><p class="modal-lead">Saquea de día, prepara tus defensas y protege el refugio de noche. Recupera los tres relés azules del mapa y sobrevive cinco noches para evacuar.</p><div class="help-grid">${[['W A S D / ↑ ↓ ← →','Moverse respecto a la cámara'],['RATÓN + CLIC','Apuntar y disparar'],['E (MANTENER)','Abrir cajas y recuperar relés'],['SHIFT','Correr · consume resistencia'],['R','Recargar el arma'],['Q','Usar un botiquín'],['1–7','Equipar una de las siete armas'],['TAB','Taller (cerca del refugio)'],['M','Consultar el mapa'],['ESC','Pausar / continuar'],['Z / X · V','Girar cámara · restablecer vista'],['RUEDA / + / −','Acercar o alejar la cámara']].map(([k,v]) => `<div><kbd>${k}</kbd><span>${v}</span></div>`).join('')}</div><div class="field-note"><strong>El refugio te protege.</strong> Dentro del perímetro los zombis no pueden entrar ni golpearte, pero atacan los muros. Si la integridad llega a cero, pierdes la partida. Las cajas marrones dan madera; las violetas, componentes. Úsalos en el taller para construir blindaje, estacas, enfermería y un generador que repara usando energía. <strong>Escucha el silencio.</strong> Correr y disparar aumenta tu huella sonora. Una huella alta atrae enemigos desde más lejos y acelera la horda. Cada amanecer recibes suministros. En móvil, usa el joystick y el botón de disparo con apuntado automático. Los botones 3D permiten girar y acercar la cámara.</div><button class="primary" data-close>ENTENDIDO <span>↗</span></button>`);
 }
 $('#help-btn').onclick = openHelp; $('#all-controls').onclick = openHelp;
 function openPause() {
@@ -128,21 +128,38 @@ function openPause() {
   };
 }
 $('#pause-btn').onclick = openPause;
+let workshopTab = 'refuge';
+const workshopGroups = {
+  refuge: { name: 'Refugio', ids: ['repair', 'walls', 'spikes', 'turret', 'infirmary', 'generator'] },
+  arsenal: { name: 'Arsenal', ids: ['shotgun', 'rifle', 'smg', 'sniper', 'crossbow', 'launcher', 'damage'] },
+  supplies: { name: 'Suministros', ids: ['ammo', 'bolts', 'rockets', 'medkit'] },
+};
 function workshop() {
   if (!started) { openHelp(); return; }
   if (game.state !== 'playing') return;
   const near = game.nearBase();
-  showModal('workshop', `${closeButton}<span class="eyebrow">INGENIERÍA DE SUPERVIVENCIA</span><h2 id="dialog-title">Taller del refugio.</h2><p class="modal-lead">${near ? 'Convierte lo que encuentras en otra noche de vida.' : 'Acércate al refugio (zona verde) para fabricar o reparar.'}</p><div class="workshop-balance"><span>▱ <b>${game.inventory.scrap}</b> CHATARRA</span><span>ϟ <b>${game.inventory.energy}</b> ENERGÍA</span><span class="text-green">PARTIDA EN PAUSA</span></div><div class="upgrade-grid">${Object.entries(UPGRADES).map(([id, u]) => {
-    const cost = game.upgradeCost(id), max = u.max && game.levels[id] >= u.max, full = id === 'repair' && game.base.hp >= game.base.maxHp;
-    const afford = Object.entries(cost).every(([k, v]) => game.inventory[k] >= v);
-    return `<button class="upgrade-card" data-buy="${id}" ${!near || !afford || max || full ? 'disabled' : ''}><span class="upgrade-icon">${u.icon}</span><div><h3>${u.title}${u.max ? `<small>${game.levels[id]}/${u.max}</small>` : ''}</h3><p>${u.description}</p><span class="upgrade-price">${max ? 'COMPLETADO' : full ? 'INTEGRIDAD MÁXIMA' : Object.entries(cost).map(([k, v]) => `${k === 'scrap' ? '▱' : 'ϟ'} ${v}`).join(' &nbsp; ')}</span></div><span class="upgrade-plus">+</span></button>`;
-  }).join('')}</div><div class="workshop-bottom"><span>Armas: pulsa 1, 2 o 3 para equiparlas.</span>${game.phase === 'day' ? '<button class="secondary compact" id="night-btn">ADELANTAR LA NOCHE →</button>' : ''}</div>`);
-  document.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => { if (game.purchase(b.dataset.buy)) { sound.play('craft'); workshop(); updateHud(); } });
+  showModal('workshop', `${closeButton}<span class="eyebrow">INGENIERÍA DE SUPERVIVENCIA</span><h2 id="dialog-title">Taller del refugio.</h2><p class="modal-lead">${near ? 'Explora, recupera materiales y construye un refugio más resistente.' : 'Acércate al refugio para fabricar o reparar.'}</p>
+    <div class="workshop-balance">${Object.entries(RESOURCES).map(([id, r]) => `<span>${r.icon} <b>${game.inventory[id]}</b> ${r.label.toUpperCase()}</span>`).join('')}<span class="text-green">PARTIDA EN PAUSA</span></div>
+    <div class="workshop-tabs" role="tablist" aria-label="Secciones del taller">${Object.entries(workshopGroups).map(([id, group]) => `<button role="tab" id="tab-${id}" aria-controls="workshop-panel" aria-selected="${workshopTab === id}" data-tab="${id}">${group.name}</button>`).join('')}</div>
+    <section id="workshop-panel" role="tabpanel" aria-labelledby="tab-${workshopTab}">
+    ${workshopTab === 'arsenal' ? `<div class="weapon-rack" aria-label="Equipar arma">${WEAPONS.map((w, i) => `<button data-equip="${i}" ${!game.weaponUnlocked(i) ? 'disabled' : ''} aria-pressed="${game.weapon === i}"><kbd>${i + 1}</kbd>${w.name}<small>${game.weapon === i ? 'EQUIPADA' : game.weaponUnlocked(i) ? 'EQUIPAR' : 'POR FABRICAR'}</small></button>`).join('')}</div>` : ''}
+    ${workshopTab === 'refuge' ? '<p class="workshop-tip">Los zombis atacan desde fuera. El blindaje reduce el daño; las estacas y torretas defienden el perímetro. La enfermería te cura dentro y el generador consume energía solo al reparar.</p>' : ''}
+    <div class="upgrade-grid">${workshopGroups[workshopTab].ids.map(id => {
+      const u = UPGRADES[id], cost = game.upgradeCost(id), max = u.max && game.levels[id] >= u.max, full = id === 'repair' && game.base.hp >= game.base.maxHp;
+      const afford = Object.entries(cost).every(([k, v]) => game.inventory[k] >= v);
+      return `<button class="upgrade-card" data-buy="${id}" ${!near || !afford || max || full ? 'disabled' : ''}><span class="upgrade-icon">${u.icon}</span><div><h3>${u.title}${u.max ? `<small>${game.levels[id]}/${u.max}</small>` : ''}</h3><p>${u.description}</p><span class="upgrade-price">${max ? 'COMPLETADO' : full ? 'INTEGRIDAD MÁXIMA' : Object.entries(cost).map(([k, v]) => `<span class="${game.inventory[k] < v ? 'missing-resource' : ''}">${RESOURCES[k].icon} ${v} ${RESOURCES[k].label}</span>`).join(' · ')}</span></div><span class="upgrade-plus">+</span></button>`;
+    }).join('')}</div></section><div class="workshop-bottom"><span>Armas: teclas 1–7 o toca el nombre del arma.</span>${game.phase === 'day' ? '<button class="secondary compact" id="night-btn">ADELANTAR LA NOCHE →</button>' : ''}</div>`);
+  document.querySelectorAll('[data-tab]').forEach(b => {
+    b.onclick = () => { workshopTab = b.dataset.tab; workshop(); $(`[data-tab="${workshopTab}"]`).focus(); };
+    b.onkeydown = e => { if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return; e.preventDefault(); const ids = Object.keys(workshopGroups); workshopTab = e.key === 'Home' ? ids[0] : e.key === 'End' ? ids.at(-1) : ids[(ids.indexOf(workshopTab) + (e.key === 'ArrowRight' ? 1 : 2)) % 3]; workshop(); $(`[data-tab="${workshopTab}"]`).focus(); };
+  });
+  document.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => { if (game.purchase(b.dataset.buy)) { sound.play('craft'); workshop(); updateHud(); const next = $(`[data-buy="${b.dataset.buy}"]`); (next.disabled ? $(`[data-tab="${workshopTab}"]`) : next).focus(); } });
+  document.querySelectorAll('[data-equip]').forEach(b => b.onclick = () => { game.switchWeapon(Number(b.dataset.equip)); workshop(); updateHud(); $(`[data-equip="${b.dataset.equip}"]`).focus(); });
   if ($('#night-btn')) $('#night-btn').onclick = () => { game.startNight(); closeModal(); };
 }
 $('#workshop-btn').onclick = workshop; $('#repair-btn').onclick = workshop;
 function openMap() {
-  showModal('map', `${closeButton}<span class="eyebrow">RECONOCIMIENTO DEL TERRENO</span><h2 id="dialog-title">Zona de exclusión.</h2><p class="modal-lead">Los cuadrados azules señalan los relés. Mantén E cerca de uno para recuperarlo.</p><canvas id="big-map" width="840" height="630" aria-label="Mapa del sector con refugio, relés, suministros y enemigos"></canvas><div class="map-legend"><span><i class="green"></i>Refugio</span><span><i class="blue"></i>Relés</span><span><i class="orange"></i>Amenazas</span><span>△ Tu posición</span></div><button class="primary" data-close>VOLVER A LA EXPEDICIÓN →</button>`); drawMinimap($('#big-map'), game, true);
+  showModal('map', `${closeButton}<span class="eyebrow">RECONOCIMIENTO DEL TERRENO</span><h2 id="dialog-title">Zona de exclusión.</h2><p class="modal-lead">Azul: relés · Marrón: madera · Violeta: componentes · Verde: suministros. Mantén E junto a una caja para recogerla. El cuadrado verde delimita el refugio protegido.</p><canvas id="big-map" width="840" height="630" aria-label="Mapa del sector con refugio, relés, suministros y enemigos"></canvas><div class="map-legend"><span><i class="green"></i>Refugio</span><span><i class="blue"></i>Relés</span><span><i class="orange"></i>Amenazas</span><span>△ Tu posición</span></div><button class="primary" data-close>VOLVER A LA EXPEDICIÓN →</button>`); drawMinimap($('#big-map'), game, true);
 }
 $('#map-btn').onclick = openMap; $('#minimap-btn').onclick = openMap;
 function showEnd() {
@@ -167,13 +184,19 @@ document.addEventListener('keydown', e => {
   keys.add(key);
   if (key === 'escape') { e.preventDefault(); openPause(); }
   if (key === 'r') game.reload(); if (key === 'q') game.heal();
-  if (['1', '2', '3'].includes(key)) game.switchWeapon(Number(key) - 1);
+  if (/^[1-7]$/.test(key)) game.switchWeapon(Number(key) - 1);
   if (key === 'tab') workshop(); if (key === 'm') openMap();
   if (key === 'z') renderer?.rotate(-1); if (key === 'x') renderer?.rotate(1); if (key === 'v') renderer?.resetCamera(game.player);
 });
 document.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
 canvas.addEventListener('pointermove', e => { const r = canvas.getBoundingClientRect(); pointer.x = e.clientX - r.left; pointer.y = e.clientY - r.top; pointer.active = true; });
-canvas.addEventListener('pointerdown', e => { if (e.button !== 0 || !started) return; pointer.down = true; canvas.setPointerCapture(e.pointerId); sound.unlock(); });
+canvas.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || !started || paused || game.state !== 'playing') return;
+  const r = canvas.getBoundingClientRect(); pointer.x = e.clientX - r.left; pointer.y = e.clientY - r.top; pointer.active = true;
+  const aim = renderer.screenToWorld(pointer.x, pointer.y); game.player.angle = Math.atan2(aim.y - game.player.y, aim.x - game.player.x);
+  // A short click must fire even when down/up both fall between animation frames.
+  game.shoot(); pointer.down = true; canvas.setPointerCapture(e.pointerId); sound.unlock();
+});
 canvas.addEventListener('pointerup', () => pointer.down = false);
 canvas.addEventListener('pointercancel', () => pointer.down = false);
 canvas.addEventListener('contextmenu', e => e.preventDefault());
@@ -193,7 +216,7 @@ function text(id, value) { const el = $('#' + id); if (el.textContent !== String
 function updateHud() {
   const g = game, night = g.phase === 'night';
   text('hp', Math.ceil(g.player.hp)); $('#hp-bar').style.width = g.player.hp + '%'; $('#stamina-bar').style.width = g.player.stamina + '%';
-  text('clip', g.reloadTimer > 0 ? '··' : g.magazines[g.weapon]); text('ammo', g.inventory.ammo); text('weapon-name', g.reloadTimer > 0 ? 'RECARGANDO...' : WEAPONS[g.weapon].name.toUpperCase());
+  text('clip', g.reloadTimer > 0 ? '··' : g.magazines[g.weapon]); text('ammo', g.inventory[WEAPONS[g.weapon].ammo]); text('ammo-kind', WEAPON_AMMO_LABELS[WEAPONS[g.weapon].ammo]); text('weapon-name', g.reloadTimer > 0 ? 'RECARGANDO...' : WEAPONS[g.weapon].name.toUpperCase());
   text('day-label', `${night ? 'NOCHE' : 'DÍA'} ${String(g.day).padStart(2, '0')}`); text('phase-icon', night ? '☾' : '☀');
   text('phase-label', night ? 'DEFIENDE EL REFUGIO' : g.phase === 'extraction' ? 'RECUPERA LOS RELÉS' : 'VENTANA DE EXPLORACIÓN');
   const remaining = Math.max(0, Math.ceil(g.time)); text('timer', Number.isFinite(remaining) ? `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}` : '∞');
@@ -204,13 +227,15 @@ function updateHud() {
   $('#base-hp').innerHTML = `${Math.ceil(g.base.hp)} <small>/ ${g.base.maxHp}</small>`; $('#base-bar').style.width = (g.base.hp / g.base.maxHp * 100) + '%';
   text('base-status', g.base.hp < g.base.maxHp * .3 ? 'CRÍTICO' : g.base.hp < g.base.maxHp * .7 ? 'DAÑADO' : 'ESTABLE');
   $('#base-status').classList.toggle('danger', g.base.hp < g.base.maxHp * .3);
-  text('defenses', `${g.turrets.length} TORRETAS ACTIVAS`);
-  for (const id of ['scrap', 'energy', 'medkits']) text(id, g.inventory[id]);
+  text('defenses', `BLINDAJE ${g.levels.walls}/3 · ${g.turrets.length} TORRETAS`);
+  text('refuge-safety', g.base.hp <= 0 ? 'REFUGIO DESTRUIDO' : g.insideRefuge() ? 'PROTEGIDO DENTRO DEL REFUGIO' : 'ENTRA AL PERÍMETRO PARA PROTEGERTE');
+  $('#refuge-safety').classList.toggle('protected', g.insideRefuge());
+  for (const id of ['scrap', 'energy', 'wood', 'parts', 'medkits']) text(id, g.inventory[id]);
   text('kill-count', `${g.kills} ELIMINADOS`); text('noise-label', g.noise > 65 ? 'CRÍTICA' : g.noise > 30 ? 'ELEVADA' : 'BAJA');
   document.querySelectorAll('[data-noise]').forEach((el, i) => { el.classList.toggle('lit', i < Math.max(2, g.noise / 100 * 22)); el.classList.toggle('loud', g.noise > 65); });
   const toast = $('#toast'); text('toast', g.message); toast.classList.toggle('visible', started && g.messageTime > 0);
   const loot = g.nearestLoot(), interaction = $('#interaction');
-  interaction.innerHTML = loot && started ? `<kbd>E</kbd> MANTÉN PARA ${loot.type === 'relay' ? 'RECUPERAR RELÉ' : 'SAQUEAR'} <span>${Math.floor(loot.progress * 100)}%</span>` : '';
+  interaction.innerHTML = loot && started ? `<kbd>E</kbd> MANTÉN PARA ${({ relay: 'RECUPERAR RELÉ', lumber: 'RECOGER MADERA', technology: 'RECOGER COMPONENTES', medical: 'RECOGER MEDICINAS' }[loot.type] || 'SAQUEAR SUMINISTROS')} <span>${Math.floor(loot.progress * 100)}%</span>` : '';
   interaction.classList.toggle('visible', !!loot && started);
   $('#workshop-btn').classList.toggle('available', started && g.nearBase());
   drawMinimap(mini, g);

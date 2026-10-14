@@ -15,6 +15,34 @@ El mundo utiliza Three.js y WebGL 2: modelos tridimensionales, cámara en perspe
 
 Una expedición dura aproximadamente 12 minutos. Puedes adelantar el anochecer desde el taller. Correr y disparar generan ruido: los enemigos te detectan desde más lejos y aparecen con mayor frecuencia durante la noche. Hay caminantes, corredores y brutos; las noches 3 y 5 incluyen un bruto adicional.
 
+### Arsenal y refugio
+
+Siete armas, con cargadores y cadencias diferentes:
+
+| Tecla | Arma | Especialidad | Munición |
+| --- | --- | --- | --- |
+| 1 | Pistola M9 | Equilibrada; disponible al empezar | Balas |
+| 2 | Escopeta Eco | Cinco perdigones a corta distancia | Balas |
+| 3 | Fusil Eclipse | Fuego automático | Balas |
+| 4 | Subfusil Ráfaga | Cadencia alta, cargador de 40 | Balas |
+| 5 | Rifle Vigía | 120 de daño; atraviesa dos enemigos | Balas |
+| 6 | Ballesta Silente | 90 de daño y ruido mínimo | Virotes |
+| 7 | Lanzagranadas Trueno | Explosión de área sin daño aliado | Granadas |
+
+Fabrica las armas en **Taller → Arsenal** y equípalas desde allí, con su tecla o tocando el nombre del arma. La ballesta incluye 12 virotes y el lanzagranadas 6 granadas, contando el cargador. Fabrica más en **Suministros**. Los proyectiles y las explosiones respetan los edificios sólidos.
+
+Dentro del **perímetro cuadrado iluminado del refugio**, los zombis no pueden entrar ni golpear al personaje. Atacan los muros desde fuera, tanto de día como de noche: **si la integridad llega a cero, termina la partida**. El taller se puede usar desde las inmediaciones, pero esa zona exterior no concede protección. El panel indica cuándo estás dentro.
+
+Saquea cajas **marrones** para obtener madera y **violetas** para componentes y energía. Las cajas generales también aportan materiales. El mapa distingue sus colores; cada amanecer concede madera y componentes adicionales. El taller muestra el coste de cada material y lo que falta.
+
+- **Blindaje**, 3 niveles: +120 de integridad máxima y actual, y 15% menos daño recibido por nivel, hasta 45%.
+- **Estacas**, 3 niveles: dañan a los zombis junto al muro, 12 puntos por segundo y nivel.
+- **Torretas**, hasta 4: disparan automáticamente a las amenazas próximas.
+- **Enfermería**, 2 niveles: recupera 3 puntos de salud por segundo y nivel mientras estés dentro.
+- **Generador**, 2 niveles: repara 4 puntos de integridad por segundo y nivel. Una unidad de energía permite 8 segundos de reparación activa; conserva el combustible restante cuando el refugio está reparado.
+
+Las mejoras aparecen físicamente en el escenario 3D. Los costes aumentan con cada nivel, por lo que tendrás que decidir entre nuevas armas, munición y defensas.
+
 ### Controles
 
 | Acción | Escritorio |
@@ -25,7 +53,7 @@ Una expedición dura aproximadamente 12 minutos. Puedes adelantar el anochecer d
 | Saquear / recuperar relé | Mantener E |
 | Recargar | R o botón junto al cargador |
 | Curarse | Q |
-| Cambiar de arma | 1, 2, 3 o nombre del arma |
+| Cambiar de arma | 1–7, taller → Arsenal o nombre del arma |
 | Taller | Tab, cerca del refugio |
 | Mapa | M |
 | Pausa | Escape |
@@ -61,7 +89,7 @@ Para publicar bajo un subdirectorio, genera con `npm run build -- --base=/nombre
 
 ## Compartir con GitHub Pages
 
-La dirección prevista del juego es **https://baztp.github.io/GAMEZOMBIS/**. Estará disponible cuando GitHub Pages termine de publicar la rama `gh-pages`.
+Juega y comparte: **https://baztp.github.io/GAMEZOMBIS/**. GitHub Pages publica la rama `gh-pages`; los cambios pueden tardar unos minutos en aparecer después de cada despliegue.
 
 ```sh
 npm run deploy:pages
@@ -79,8 +107,8 @@ npm run test:e2e
 npm run build
 ```
 
-- **12 pruebas de motor** con `node:test`: generación, movimiento, colisiones, disparos, recarga, saqueo, fabricación, curación, ciclo día/noche, torretas, victoria y derrota.
-- **7 pruebas de navegador** con Playwright: flujo de escritorio, controles táctiles, sonido sin peticiones externas, renderizado WebGL real, disparos tras girar la cámara, liberación de recursos gráficos al reiniciar, iluminación nocturna, controles de cámara y respuesta ante la ausencia de WebGL.
+- **23 pruebas de motor** con `node:test`: generación, movimiento, colisiones, disparos, recarga, saqueo, fabricación, curación, ciclo día/noche, torretas, victoria y derrota; además, siete armas, munición separada, penetración, explosiones, protección del perímetro, materiales, estacas, enfermería y consumo de energía del generador.
+- **10 pruebas de navegador** con Playwright: flujo de escritorio, controles táctiles, sonido sin peticiones externas, renderizado WebGL real, disparos tras girar la cámara, liberación de recursos gráficos al reiniciar, iluminación nocturna, controles de cámara y respuesta ante la ausencia de WebGL, costes de materiales, fabricación y equipamiento desde el taller y nuevas construcciones 3D.
 - Las pruebas de navegador usan Chromium en `/usr/bin/chromium`. Si está en otra ruta, establece `CHROMIUM_PATH`. Playwright inicia Vite automáticamente si no está funcionando.
 - Las capturas de comprobación se guardan en `/tmp/zombis-desktop.png`, `/tmp/zombis-playing.png` y `/tmp/zombis-mobile.png`.
 

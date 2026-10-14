@@ -13,6 +13,7 @@ test('desktop: start, movement, shooting, reload, workshop, map and pause', asyn
   await expect(page.locator('#clip')).not.toHaveText('12');
   await page.keyboard.press('r'); await expect(page.locator('#clip')).toHaveText('12', { timeout: 4000 });
   await page.keyboard.press('Tab'); await expect(page.getByRole('heading', { name: 'Taller del refugio.' })).toBeVisible();
+  await page.getByRole('tab', { name: 'Suministros' }).click();
   const ammoBefore = Number(await page.locator('#ammo').textContent());
   await page.locator('[data-buy="ammo"]').click(); await expect(page.locator('#scrap')).toHaveText('16');
   await page.keyboard.press('Escape'); await expect(page.locator('#ammo')).toHaveText(String(ammoBefore + 60));

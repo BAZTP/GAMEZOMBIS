@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BASE, WORLD, clamp, randomGenerator } from './engine.js';
+import { BASE, WORLD, WEAPONS, clamp, randomGenerator } from './engine.js';
 import { Assets, batchStatic, survivor, zombie, tree, building, shelter, lootCrate, turret, wreck } from './models.js';
 import { drawMinimap } from './minimap.js';
 
@@ -145,8 +145,17 @@ export class Renderer {
     this.baseModel = shelter(a); this.world.add(this.baseModel.root);
     this.occluders.push({ root: this.baseModel.root, center: new THREE.Vector3(0, 0, -.65), radius: 4 });
     const baseLabel = this.label('REFUGIO 07', '#d4eea4', 3.1); baseLabel.position.set(0, 2.47, 1.82); this.baseModel.root.add(baseLabel);
-    this.safeRing = a.ring(this.world, '#7b995b', 10.25, .02);
-    this.safeRing.material = new THREE.MeshBasicMaterial({ color: '#b5d183', transparent: true, opacity: .13, depthWrite: false, side: THREE.DoubleSide }); this.safeRing.userData.ownedMaterial = true;
+    this.safeBoundary = new THREE.Group(); this.world.add(this.safeBoundary);
+    const edge = BASE.halfSize / SCALE;
+    for (const sign of [-1, 1]) {
+      a.box(this.safeBoundary, '#b5d183', [sign * edge, .13, 0], [.035, .025, edge * 2], true);
+      a.box(this.safeBoundary, '#b5d183', [0, .13, sign * edge], [edge * 2, .025, .035], true);
+    }
+    this.blastModels = Array.from({ length: 16 }, () => {
+      const ring = a.ring(this.world, '#ffc06b', 1, .17);
+      ring.material = new THREE.MeshBasicMaterial({ color: '#ffc06b', transparent: true, opacity: .7, depthWrite: false, side: THREE.DoubleSide });
+      ring.userData.ownedMaterial = true; ring.visible = false; return ring;
+    });
     for (const loot of game.loot) { const model = lootCrate(a, loot.type); model.root.position.copy(point(loot.x, loot.y)); this.world.add(model.root); this.lootModels.set(loot, model); }
     this.hero = survivor(a); this.world.add(this.hero.root);
     this.heroLast = { x: game.player.x, y: game.player.y };
@@ -167,8 +176,10 @@ export class Renderer {
     hero.body.position.y = speed > 2 ? Math.sin(time * 14) * .04 : Math.sin(time * 2) * .012;
     hero.legs.forEach((leg, i) => leg.rotation.x = speed > 2 ? Math.sin(time * (speed > 180 ? 19 : 13) + i * Math.PI) * .48 : 0);
     hero.arms.rotation.x = game.reloadTimer > 0 ? .48 + Math.sin(time * 11) * .12 : 0;
-    hero.gun.scale.z = game.weapon === 0 ? 1 : game.weapon === 1 ? 1.65 : 2;
-    hero.flash.visible = game.shotTimer > [ .215, .60, .065 ][game.weapon] && game.reloadTimer <= 0;
+    const weapon = WEAPONS[game.weapon];
+    hero.gun.scale.z = weapon.length;
+    hero.attachments.forEach((group, i) => group.visible = i === game.weapon);
+    hero.flash.visible = weapon.ammo !== 'bolts' && game.shotTimer > weapon.interval - .055 && game.reloadTimer <= 0;
     hero.body.visible = !(p.invulnerable > 0 && Math.sin(time * 30) > .3);
     this.heroLast = { x: p.x, y: p.y };
     const living = new Set(game.enemies);
@@ -196,6 +207,11 @@ export class Renderer {
     }
   }
   updateEffects(game) {
+    this.blastModels.forEach((model, i) => {
+      const blast = game.blasts[i]; model.visible = !!blast;
+      if (!blast) return;
+      model.position.copy(point(blast.x, blast.y, .17)); model.scale.setScalar(blast.radius / SCALE * (1 - blast.life / .5)); model.material.opacity = blast.life * 2;
+    });
     let index = 0;
     for (const b of game.bullets.slice(0, 256)) {
       const from = point(b.x, b.y, 1.14), to = point(b.x - b.vx * .018, b.y - b.vy * .018, 1.14);
@@ -228,6 +244,16 @@ export class Renderer {
     const animTime = game.elapsed;
     this.baseModel.beacon.scale.setScalar(.14 + Math.sin(animTime * 3) * .025);
     this.baseModel.armor.visible = game.levels.walls > 0; this.baseModel.fill.scale.x = 4 * Math.max(.001, game.base.hp / game.base.maxHp);
+    this.baseModel.armor.scale.y = 1 + game.levels.walls * .16;
+    this.baseModel.spikes.visible = game.levels.spikes > 0; this.baseModel.spikes.scale.y = .75 + game.levels.spikes * .25;
+    this.baseModel.infirmary.visible = game.levels.infirmary > 0;
+    this.baseModel.generator.visible = game.levels.generator > 0;
+    this.baseModel.generatorLamp.visible = game.generatorFuelTime > 0 && game.base.hp < game.base.maxHp;
+    this.baseModel.gates.forEach((gate, i) => {
+      const angle = i * Math.PI / 2, x = BASE.x + Math.sin(angle) * 93, y = BASE.y + Math.cos(angle) * 93;
+      const open = Math.hypot(game.player.x - x, game.player.y - y) < 55;
+      gate.scale.y = THREE.MathUtils.lerp(gate.scale.y, open ? .12 : 1.5, Math.min(1, dt * 10)); gate.position.y = gate.scale.y / 2 + .1;
+    });
     this.updateCharacters(game, animTime, dt); this.updateEffects(game);
     const hero = point(game.player.x, game.player.y, 1.2);
     const ray = new THREE.Ray(this.camera.position, hero.clone().sub(this.camera.position).normalize());

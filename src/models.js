@@ -75,9 +75,20 @@ export function survivor(a) {
   const gun = new THREE.Group(); gun.position.set(.28, -.1, -.63); arms.add(gun);
   a.box(gun, '#252e30', [0, 0, -.15], [.18, .21, .56]);
   a.box(gun, '#718084', [0, .06, -.3], [.12, .12, .4]);
+  const attachments = Array.from({ length: 7 }, () => { const group = new THREE.Group(); gun.add(group); return group; });
+  a.box(attachments[1], '#75634c', [0, -.1, -.3], [.27, .15, .28]);
+  a.box(attachments[2], '#51644e', [0, -.23, -.12], [.15, .3, .15]);
+  a.box(attachments[3], '#293537', [0, -.22, -.2], [.2, .4, .13]);
+  a.mesh(attachments[4], 'cylinder', '#657779', [0, .22, -.2], [.09, .24, .09]).rotation.x = Math.PI / 2;
+  a.box(attachments[4], '#303c39', [0, .14, -.2], [.1, .13, .16]);
+  for (const sign of [-1, 1]) {
+    a.box(attachments[5], '#bc9364', [sign * .36, .03, -.38], [.8, .09, .08]).rotation.y = sign * .25;
+    a.box(attachments[5], '#d0d7c1', [sign * .32, .04, -.22], [.68, .025, .018]).rotation.y = -sign * .3;
+  }
+  a.mesh(attachments[6], 'cylinder', '#778454', [0, -.04, -.24], [.24, .44, .24]).rotation.x = Math.PI / 2;
   const flash = a.mesh(gun, 'sphere', '#ffdf8f', [0, 0, -.6], [.18, .18, .35], true); flash.visible = false;
   const ring = a.ring(root, '#9bbe72', .83);
-  return { root, body, legs, arms, gun, flash, ring };
+  return { root, body, legs, arms, gun, flash, ring, attachments };
 }
 
 export function zombie(a, type) {
@@ -173,9 +184,17 @@ export function shelter(a) {
   a.box(antenna, '#a1b39b', [0, 5.8, 0], [1.6, .065, .065]);
   const beacon = a.mesh(antenna, 'sphere', '#d8f4a0', [0, 6.35, 0], [.16, .16, .16], true);
   // Segmented perimeter leaves an entrance on each side.
-  const armor = new THREE.Group(); root.add(armor);
+  const armor = new THREE.Group(), spikes = new THREE.Group(), gates = []; root.add(armor, spikes);
   for (let side = 0; side < 4; side++) {
     const fence = new THREE.Group(); fence.rotation.y = side * Math.PI / 2; root.add(fence);
+    const gate = a.box(fence, '#91b58a', [0, .85, 4.65], [2.3, 1.5, .18]); gates.push(gate);
+    a.box(fence, '#c7e4a0', [0, 1.63, 4.65], [2.5, .08, .2], true);
+    for (let j = -4; j <= 4; j++) {
+      if (Math.abs(j) < 2) continue;
+      const spike = a.mesh(spikes, 'cone', '#bca47c', [j, .55, 5.35], [.17, 1.4, .17]);
+      spike.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), side * Math.PI / 2);
+      spike.rotation.set(.45 * Math.cos(side * Math.PI / 2), 0, -.45 * Math.sin(side * Math.PI / 2));
+    }
     for (const sign of [-1, 1]) {
       for (let row = 0; row < 2; row++) for (let j = 0; j < 5; j++) {
         a.box(fence, row ? '#8b876a' : '#736f57', [sign * (1.55 + j * .7), .32 + row * .4, 4.65], [.76, .42, .7]);
@@ -186,6 +205,15 @@ export function shelter(a) {
     }
   }
   armor.visible = false;
+  const infirmary = new THREE.Group(); infirmary.position.set(-2.4, 0, 3.25); root.add(infirmary);
+  a.box(infirmary, '#e0d7b9', [0, .43, 0], [1.2, .8, .65]);
+  a.box(infirmary, '#b76557', [0, .87, 0], [.2, .03, .5]);
+  a.box(infirmary, '#b76557', [0, .87, 0], [.6, .03, .17]);
+  const generator = new THREE.Group(); generator.position.set(2.4, 0, 3.25); root.add(generator);
+  a.box(generator, '#b39b58', [0, .5, 0], [1.3, 1, .85]);
+  for (let j = 0; j < 4; j++) a.box(generator, '#354941', [-.4 + j * .26, .5, .44], [.1, .6, .04]);
+  a.mesh(generator, 'cylinder', '#64756d', [.4, 1.2, -.2], [.09, .5, .09]);
+  const generatorLamp = a.box(generator, '#b8e787', [-.35, .93, .45], [.16, .08, .05], true);
   for (const x of [-4.45, 4.45]) {
     a.mesh(root, 'cylinder', '#566a5c', [x, 1.65, 3.8], [.07, 3.3, .07]);
     a.box(root, '#d6c79e', [x, 3.3, 3.8], [.35, .19, .3], true);
@@ -194,11 +222,11 @@ export function shelter(a) {
   a.box(health, '#2c4131', [0, 0, 0], [4, .04, .12]);
   const fill = a.box(health, '#b4d97d', [0, .025, 0], [4, .04, .12], true);
   root.userData.fadeMeshes = [walls, roof];
-  return { root, beacon, armor, fill };
+  return { root, beacon, armor, fill, gates, spikes, infirmary, generator, generatorLamp };
 }
 
 export function lootCrate(a, type) {
-  const root = new THREE.Group(), color = type === 'relay' ? '#87d4d3' : type === 'medical' ? '#d5997d' : '#c2cd89';
+  const root = new THREE.Group(), color = { relay: '#87d4d3', medical: '#d5997d', lumber: '#d8a56d', technology: '#b6a0e1' }[type] || '#c2cd89';
   a.box(root, '#3c4c40', [0, .34, 0], [1.04, .62, .75]);
   const lid = new THREE.Group(); lid.position.set(0, .64, -.37); root.add(lid);
   a.box(lid, '#56644c', [0, .03, .37], [1.08, .14, .8]);
@@ -206,6 +234,8 @@ export function lootCrate(a, type) {
   a.box(root, color, [0, .4, .405], [.13, .19, .04], true);
   const marker = new THREE.Group(); root.add(marker);
   const diamond = a.mesh(marker, 'sphere', color, [0, 1.4, 0], [.14, .2, .14], true);
+  if (type === 'lumber') for (let j = 0; j < 3; j++) a.box(lid, '#be9567', [-.3 + j * .3, .2, .37], [.22, .15, 1.1]);
+  if (type === 'technology') { a.box(lid, '#b6a0e1', [0, .17, .37], [.4, .15, .4]); a.box(lid, '#d5eddf', [0, .26, .37], [.2, .03, .2], true); }
   if (type === 'relay') {
     a.mesh(root, 'cylinder', '#789c99', [0, 1.05, 0], [.05, 1.4, .05]);
     a.box(root, color, [0, 1.62, 0], [.9, .045, .045], true);

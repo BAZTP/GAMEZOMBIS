@@ -43,7 +43,7 @@ test('restart releases GPU resources and night lighting and built turrets update
     const counts = [];
     for (let i = 0; i < 4; i++) { const g = new Game({ seed: 42 }); r.draw(g, i + 1); counts.push({ ...r.gpu.info.memory }); }
     const g = r.currentGame; const daylight = r.sun.intensity;
-    g.inventory.scrap = 100; g.inventory.energy = 50; g.purchase('turret'); g.purchase('walls');
+    g.inventory.scrap = 100; g.inventory.energy = 50; g.inventory.wood = 50; g.inventory.parts = 20; g.purchase('turret'); g.purchase('walls');
     g.startNight(); for (let i = 0; i < 40; i++) r.draw(g, 5 + i * .1);
     const result = { counts, daylight, night: r.sun.intensity, flashlight: r.flashlight.intensity, turrets: r.turretModels.size, armor: r.baseModel.armor.visible };
     r.dispose(); return result;

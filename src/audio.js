@@ -10,6 +10,8 @@ export class Sound {
   }
   play(event) {
     if (event === 'shot') this.tone(130, .09, 'sawtooth', .035, 35);
+    else if (event === 'crossbow') this.tone(340, .08, 'triangle', .025, 130);
+    else if (event === 'explosion') this.tone(75, .4, 'sawtooth', .07, 22);
     else if (event === 'hurt') this.tone(90, .18, 'triangle', .09, 35);
     else if (event === 'alarm' || event === 'lose') { this.tone(220, .6, 'sawtooth', .04, 110); }
     else if (event === 'reload') this.tone(400, .08, 'square', .013, 250);
